@@ -29,7 +29,7 @@ export type Question =
       explanation: string;
     };
 
-export type Flashcard = { id: string; front: string; back: string };
+export type Flashcard = { id?: string; front: string; back: string };
 
 export type Node = {
   id: string;
