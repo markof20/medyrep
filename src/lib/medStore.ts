@@ -1,20 +1,26 @@
 import { useEffect, useState, useCallback } from "react";
+import { REQUIRED_RUNS } from "@/data/medContent";
 
-const KEY = "medrep:state:v1";
+const KEY = "medrep:state:v2";
 const MAX_LIVES = 5;
 const LIFE_REGEN_MS = 30 * 60 * 1000; // 30 min per life
+
+export type NodeProgress = {
+  runs: number; // completed sessions of 15 questions (0..REQUIRED_RUNS)
+  correctIds: string[]; // question ids ever answered correctly in this node
+};
 
 export type MedState = {
   xp: number;
   weeklyXp: number;
-  weekStart: number; // ms timestamp of monday
+  weekStart: number;
   lives: number;
   lastLifeLossAt: number | null;
   streak: number;
-  lastStudyDay: string | null; // YYYY-MM-DD
-  progress: Record<string, number>; // nodeId -> 0..5 (questions answered correctly)
-  completed: Record<string, boolean>; // nodeId -> true if 5/5
-  mistakes: string[]; // question ids
+  lastStudyDay: string | null;
+  // New per-node progress (runs + correctly-answered question ids).
+  nodeProgress: Record<string, NodeProgress>;
+  mistakes: string[]; // question ids ever answered wrong (review queue)
 };
 
 function getMonday(d = new Date()): number {
@@ -39,8 +45,7 @@ function defaultState(): MedState {
     lastLifeLossAt: null,
     streak: 0,
     lastStudyDay: null,
-    progress: {},
-    completed: {},
+    nodeProgress: {},
     mistakes: [],
   };
 }
@@ -51,21 +56,21 @@ function load(): MedState {
     const raw = localStorage.getItem(KEY);
     if (!raw) return defaultState();
     const parsed = { ...defaultState(), ...JSON.parse(raw) } as MedState;
-    // weekly reset
     const monday = getMonday();
     if (parsed.weekStart !== monday) {
       parsed.weekStart = monday;
       parsed.weeklyXp = 0;
     }
-    // life regen
     if (parsed.lives < MAX_LIVES && parsed.lastLifeLossAt) {
       const elapsed = Date.now() - parsed.lastLifeLossAt;
       const regen = Math.floor(elapsed / LIFE_REGEN_MS);
       if (regen > 0) {
         parsed.lives = Math.min(MAX_LIVES, parsed.lives + regen);
-        parsed.lastLifeLossAt = parsed.lives >= MAX_LIVES ? null : parsed.lastLifeLossAt + regen * LIFE_REGEN_MS;
+        parsed.lastLifeLossAt =
+          parsed.lives >= MAX_LIVES ? null : parsed.lastLifeLossAt + regen * LIFE_REGEN_MS;
       }
     }
+    if (!parsed.nodeProgress) parsed.nodeProgress = {};
     return parsed;
   } catch {
     return defaultState();
@@ -79,7 +84,6 @@ function save(s: MedState) {
   } catch {}
 }
 
-// Simple pub/sub so multiple components stay in sync
 const listeners = new Set<() => void>();
 let current: MedState | null = null;
 
@@ -100,7 +104,6 @@ export function useMedStore() {
   useEffect(() => {
     const l = () => force((n) => n + 1);
     listeners.add(l);
-    // re-load on mount to pick up regen
     current = load();
     force((n) => n + 1);
     return () => {
@@ -134,27 +137,33 @@ export function useMedStore() {
     setState((s) => ({ ...s, mistakes: s.mistakes.filter((x) => x !== qid) }));
   }, []);
 
-  const setNodeProgress = useCallback((nodeId: string, correctCount: number, total: number) => {
+  /**
+   * Records the end of a session: stores newly-correct question ids and
+   * increments the runs counter (capped at REQUIRED_RUNS).
+   */
+  const finishSession = useCallback((nodeId: string, sessionCorrectIds: string[]) => {
     setState((s) => {
-      const completed = { ...s.completed };
-      const progress = { ...s.progress, [nodeId]: correctCount };
-      if (correctCount >= total) completed[nodeId] = true;
-      // streak
+      const prev = s.nodeProgress[nodeId] ?? { runs: 0, correctIds: [] };
+      const correctIds = Array.from(new Set([...prev.correctIds, ...sessionCorrectIds]));
+      const runs = Math.min(REQUIRED_RUNS, prev.runs + 1);
+      const nodeProgress = { ...s.nodeProgress, [nodeId]: { runs, correctIds } };
+
+      // streak update
       const t = todayStr();
       let streak = s.streak;
       let lastStudyDay = s.lastStudyDay;
       if (lastStudyDay !== t) {
         if (lastStudyDay) {
-          const prev = new Date(lastStudyDay);
+          const prevDay = new Date(lastStudyDay);
           const today = new Date(t);
-          const diff = Math.round((today.getTime() - prev.getTime()) / 86400000);
+          const diff = Math.round((today.getTime() - prevDay.getTime()) / 86400000);
           streak = diff === 1 ? streak + 1 : 1;
         } else {
           streak = 1;
         }
         lastStudyDay = t;
       }
-      return { ...s, progress, completed, streak, lastStudyDay };
+      return { ...s, nodeProgress, streak, lastStudyDay };
     });
   }, []);
 
@@ -169,15 +178,23 @@ export function useMedStore() {
     refillLives,
     recordMistake,
     removeMistake,
-    setNodeProgress,
+    finishSession,
     reset,
     MAX_LIVES,
+    REQUIRED_RUNS,
   };
+}
+
+export function getNodeProgress(state: MedState, nodeId: string): NodeProgress {
+  return state.nodeProgress[nodeId] ?? { runs: 0, correctIds: [] };
+}
+
+export function isNodeCompleted(state: MedState, nodeId: string): boolean {
+  return getNodeProgress(state, nodeId).runs >= REQUIRED_RUNS;
 }
 
 export function isNodeUnlocked(state: MedState, nodeIds: string[], nodeId: string): boolean {
   const idx = nodeIds.indexOf(nodeId);
   if (idx <= 0) return true;
-  const prev = nodeIds[idx - 1];
-  return !!state.completed[prev];
+  return isNodeCompleted(state, nodeIds[idx - 1]);
 }
