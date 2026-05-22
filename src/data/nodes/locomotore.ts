@@ -1,0 +1,67 @@
+import type { Node } from "../medContent";
+import { m, c, cli } from "../qb";
+
+export const locomotore: Node = {
+  id: "locomotore",
+  title: "Apparato Locomotore",
+  subtitle: "Ossa, articolazioni e muscoli",
+  emoji: "🦴",
+  flashcards: [
+    { front: "Quante vertebre cervicali?", back: "7 (C1-C7)." },
+    { front: "Definizione di diartrosi", back: "Articolazione mobile con cavità sinoviale (es. spalla, anca)." },
+    { front: "Origine del bicipite brachiale", back: "Capo lungo: tubercolo sopraglenoideo. Capo breve: processo coracoideo." },
+    { front: "Componente minerale dell'osso", back: "Idrossiapatite (fosfato di calcio cristallino)." },
+  ],
+  questions: [
+    // ---- Scelta multipla (20) ----
+    m("loc-m1", "Quante ossa compongono lo scheletro umano adulto?", ["186", "206", "256", "300"], 1, "L'adulto ha 206 ossa: alla nascita ne contiamo ~270, molte si fondono nel cranio e nel sacro."),
+    m("loc-m2", "Quante vertebre cervicali abbiamo?", ["5", "7", "12", "9"], 1, "7 vertebre cervicali (C1-C7); C1 è l'atlante, C2 l'epistrofeo."),
+    m("loc-m3", "Quante vertebre toraciche?", ["10", "11", "12", "14"], 2, "12 vertebre toraciche, ciascuna articolata con una coppia di coste."),
+    m("loc-m4", "Quante vertebre lombari?", ["3", "4", "5", "6"], 2, "5 vertebre lombari (L1-L5), robuste e portanti."),
+    m("loc-m5", "L'osso più lungo del corpo umano è:", ["Tibia", "Femore", "Omero", "Radio"], 1, "Il femore è l'osso più lungo, forte e pesante del corpo."),
+    m("loc-m6", "Il tessuto del menisco è:", ["Cartilagine ialina", "Fibrocartilagine", "Cartilagine elastica", "Osso compatto"], 1, "I menischi sono fibrocartilaginei: resistono a compressione e taglio."),
+    m("loc-m7", "L'articolazione della spalla è una:", ["Trocleartrosi", "Enartrosi", "Artrodia", "Condilartrosi"], 1, "La gleno-omerale è una enartrosi: massima mobilità, minima stabilità."),
+    m("loc-m8", "Quale è un'articolazione mobile (diartrosi)?", ["Suture craniche", "Sinfisi pubica", "Spalla", "Tra vertebre"], 2, "La spalla è enartrosi, articolazione sferoidale mobile su tutti i piani."),
+    m("loc-m9", "Il muscolo deltoide è innervato da:", ["Nervo ulnare", "Nervo ascellare", "Nervo radiale", "Nervo mediano"], 1, "Il deltoide è innervato dal nervo ascellare (C5-C6)."),
+    m("loc-m10", "Quante paia di coste abbiamo?", ["10", "11", "12", "13"], 2, "12 paia di coste: 7 vere, 3 false, 2 fluttuanti."),
+    m("loc-m11", "Cellule che depongono nuova matrice ossea:", ["Osteoclasti", "Osteoblasti", "Osteociti", "Condrociti"], 1, "Gli osteoblasti sintetizzano la matrice; gli osteoclasti la riassorbono."),
+    m("loc-m12", "Cellule che riassorbono l'osso sono:", ["Osteoblasti", "Osteoclasti", "Fibroblasti", "Mioblasti"], 1, "Gli osteoclasti, di origine monocitaria, riassorbono la matrice ossea."),
+    m("loc-m13", "Il tendine d'Achille si inserisce sul:", ["Astragalo", "Calcagno", "Cuboide", "Scafoide tarsale"], 1, "Il tendine d'Achille (tricipite surale) si inserisce sul calcagno."),
+    m("loc-m14", "Componente minerale principale della matrice ossea:", ["Carbonato di sodio", "Idrossiapatite", "Solfato di magnesio", "Cloruro di calcio"], 1, "L'idrossiapatite (Ca10(PO4)6(OH)2) conferisce durezza all'osso."),
+    m("loc-m15", "L'articolazione del gomito è di tipo:", ["Enartrosi", "Trocleartrosi (ginglimo angolare)", "Artrodia", "Sinfisi"], 1, "Il gomito è una trocleartrosi: permette flesso-estensione su un piano."),
+    m("loc-m16", "Quante ossa compongono il carpo?", ["6", "7", "8", "9"], 2, "8 ossa del carpo disposte in due file (prossimale e distale)."),
+    m("loc-m17", "Quante falangi totali in una mano?", ["12", "14", "16", "10"], 1, "14 falangi: 3 per dito eccetto il pollice che ne ha 2."),
+    m("loc-m18", "Il muscolo principale dell'inspirazione tranquilla è:", ["Sternocleidomastoideo", "Intercostali interni", "Diaframma", "Retto dell'addome"], 2, "Il diaframma, contraendosi, abbassa la cupola e amplia il torace."),
+    m("loc-m19", "Le suture del cranio sono articolazioni:", ["Diartrosi", "Anfiartrosi", "Sinartrosi (sinfibrose)", "Sinoviali"], 2, "Le suture sono sinartrosi fibrose: praticamente immobili nell'adulto."),
+    m("loc-m20", "Il quadricipite femorale ha quanti capi?", ["2", "3", "4", "5"], 2, "4 capi: retto femorale, vasto laterale, mediale e intermedio."),
+
+    // ---- Cloze / Riempi lo spazio (15) ----
+    c("loc-c1", "La porzione centrale e allungata di un osso lungo si chiama ___.", ["epifisi", "diafisi", "metafisi", "periostio"], 1, "La [[diafisi]] è il corpo dell'osso lungo; le [[epifisi]] sono le estremità."),
+    c("loc-c2", "L'estremità articolare di un osso lungo è detta ___.", ["diafisi", "epifisi", "diploë", "endostio"], 1, "L'[[epifisi]] è ricoperta da cartilagine ialina articolare."),
+    c("loc-c3", "Il muscolo ___ è il principale estensore della gamba sul ginocchio.", ["bicipite femorale", "quadricipite", "sartorio", "gastrocnemio"], 1, "Il quadricipite, agendo sulla rotula, estende il ginocchio."),
+    c("loc-c4", "La membrana connettivale che riveste esternamente l'osso è il ___.", ["endostio", "periostio", "pericondrio", "perimisio"], 1, "Il periostio nutre l'osso e contiene osteoblasti."),
+    c("loc-c5", "Le cellule mature del tessuto osseo sono gli ___.", ["osteoblasti", "osteoclasti", "osteociti", "condrociti"], 2, "Gli osteociti, derivati dagli osteoblasti, risiedono nelle lacune ossee."),
+    c("loc-c6", "L'unico osso mobile del cranio è la ___.", ["mascella", "mandibola", "etmoide", "vomere"], 1, "La mandibola si articola con il temporale (ATM)."),
+    c("loc-c7", "Il legamento ___ impedisce la traslazione anteriore della tibia.", ["crociato posteriore", "crociato anteriore", "collaterale mediale", "rotuleo"], 1, "Il LCA è il legamento più frequentemente lesionato nei traumi sportivi."),
+    c("loc-c8", "La cartilagine articolare è di tipo ___.", ["fibrosa", "ialina", "elastica", "calcificata"], 1, "La cartilagine ialina riveste le superfici articolari delle diartrosi."),
+    c("loc-c9", "L'osso più voluminoso del tarso è il ___.", ["astragalo", "calcagno", "cuboide", "navicolare"], 1, "Il calcagno costituisce il tallone e riceve il tendine d'Achille."),
+    c("loc-c10", "Il muscolo ___ separa la cavità toracica dall'addome.", ["psoas", "diaframma", "trasverso dell'addome", "obliquo interno"], 1, "Il diaframma è una cupola muscolo-tendinea, principale muscolo respiratorio."),
+    c("loc-c11", "L'incurvatura laterale patologica del rachide si chiama ___.", ["lordosi", "cifosi", "scoliosi", "spondilolisi"], 2, "La scoliosi è una deviazione laterale con rotazione vertebrale."),
+    c("loc-c12", "Il muscolo grande ___ adduce e ruota internamente il braccio.", ["dorsale", "pettorale", "rotondo", "deltoide"], 1, "Il grande pettorale adduce, flette anteriormente e ruota internamente il braccio."),
+    c("loc-c13", "La sutura tra le due ossa parietali è detta ___.", ["coronale", "sagittale", "lambdoidea", "squamosa"], 1, "La sutura sagittale corre sulla linea mediana del cranio."),
+    c("loc-c14", "Il principale flessore dell'avambraccio sul braccio è il ___.", ["tricipite", "bicipite brachiale", "brachioradiale", "anconeo"], 1, "Il bicipite brachiale è anche un potente supinatore dell'avambraccio."),
+    c("loc-c15", "La cintura pelvica è formata da ileo, ischio e ___.", ["sacro", "pube", "coccige", "femore"], 1, "Ileo, ischio e pube si fondono nell'acetabolo formando l'osso coxale."),
+
+    // ---- Casi clinici (10) ----
+    cli("loc-cl1", "Ragazzo 22 anni dopo trauma sportivo: dolore acuto al ginocchio, gonfiore e instabilità antero-laterale.", "Quale struttura è più probabilmente lesionata?", ["Legamento crociato anteriore", "Tendine d'Achille", "Menisco esterno isolato", "Rotula"], 0, "Meccanismo di torsione + instabilità antero-laterale = rottura del LCA."),
+    cli("loc-cl2", "Donna 68 anni cade sull'anca: arto inferiore destro accorciato ed extra-ruotato, impossibilità a deambulare.", "Diagnosi più probabile?", ["Lussazione di rotula", "Frattura del collo del femore", "Distorsione di caviglia", "Strappo del quadricipite"], 1, "Accorciamento + extrarotazione nell'anziano = frattura del collo del femore."),
+    cli("loc-cl3", "Lussazione anteriore della spalla in un giovane: deficit della sensibilità nella regione deltoidea laterale.", "Quale nervo è più probabilmente leso?", ["Radiale", "Ascellare", "Muscolocutaneo", "Mediano"], 1, "Il nervo ascellare passa nel cavo ascellare ed è vulnerabile nelle lussazioni."),
+    cli("loc-cl4", "Donna 55 anni, frattura del polso dopo caduta sul palmo esteso.", "Tipo di frattura più probabile?", ["Smith", "Colles", "Galeazzi", "Monteggia"], 1, "La frattura di Colles è del radio distale con dorsalizzazione del frammento."),
+    cli("loc-cl5", "Calciatore avverte uno 'schiocco' al polpaccio e impossibilità alla flessione plantare.", "Struttura lesa?", ["LCA", "Tendine d'Achille", "Menisco mediale", "Peroneo lungo"], 1, "Rottura del tendine d'Achille: test di Thompson positivo."),
+    cli("loc-cl6", "Bambino di 5 anni, dopo trazione del braccio piange e tiene l'arto pronato e flesso.", "Diagnosi?", ["Frattura sovracondiloidea", "Pronazione dolorosa (sublussazione del capitello radiale)", "Lussazione di spalla", "Frattura di clavicola"], 1, "Pronazione dolorosa: sublussazione del legamento anulare nei bambini piccoli."),
+    cli("loc-cl7", "Operaio cade dal tetto e atterra in piedi: dolore al tallone e impossibilità a caricare.", "Frattura più probabile?", ["Astragalo", "Calcagno", "Metatarso", "Tibia distale"], 1, "La frattura del calcagno è tipica nei traumi da caduta dall'alto."),
+    cli("loc-cl8", "Donna 70 anni con dolore lombare cronico, riduzione della statura e cifosi dorsale accentuata.", "Patologia di base più probabile?", ["Spondilite anchilosante", "Osteoporosi con cedimenti vertebrali", "Ernia discale", "Scoliosi idiopatica"], 1, "L'osteoporosi senile causa fratture-cedimento vertebrali multiple."),
+    cli("loc-cl9", "Trauma alla mano: incapacità a estendere la falange distale del dito medio.", "Lesione?", ["Dito a martello (rottura tendine estensore)", "Sindrome del tunnel carpale", "Frattura di Bennett", "Tenosinovite di De Quervain"], 0, "Dito a martello: avulsione del tendine estensore alla base della falange distale."),
+    cli("loc-cl10", "Donna 45 anni: parestesie alle prime tre dita della mano, peggiori di notte. Tinel positivo al polso.", "Diagnosi?", ["Sindrome del tunnel carpale", "Tunnel cubitale", "Cervicobrachialgia C8", "Rizoartrosi"], 0, "Compressione del nervo mediano nel tunnel carpale: parestesie I-III dito."),
+  ],
+};
