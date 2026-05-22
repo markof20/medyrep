@@ -189,10 +189,11 @@ function FlashcardsTab() {
     const ids: string[] = [];
     for (let i = 0; i < NODES.length; i++) {
       const id = NODES[i].id;
-      if (i === 0 || state.completed[NODES[i - 1].id] || state.completed[id]) ids.push(id);
+      const prevDone = i === 0 || (state.nodeProgress[NODES[i - 1].id]?.runs ?? 0) > 0;
+      if (prevDone) ids.push(id);
     }
     return ids;
-  }, [state.completed]);
+  }, [state.nodeProgress]);
   const [nodeId, setNodeId] = useState(unlockedIds[0] ?? NODES[0].id);
   const node = NODES.find((n) => n.id === nodeId)!;
   const cards: Flashcard[] = node.flashcards;
