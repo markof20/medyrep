@@ -40,26 +40,37 @@ function HomePage() {
           <p className="text-sm opacity-90 mt-1">{SUBJECT.faculty}</p>
         </div>
 
-        <ol className="relative space-y-10">
+        <ol className="relative space-y-12">
           {NODES.map((node, idx) => {
             const unlocked = isNodeUnlocked(state, nodeIds, node.id);
-            const progress = state.progress[node.id] ?? 0;
-            const completed = state.completed[node.id];
-            const total = node.questions.length;
+            const np = getNodeProgress(state, node.id);
+            const completed = isNodeCompleted(state, node.id);
             const align = idx % 2 === 0 ? "items-start" : "items-end";
             return (
               <li key={node.id} className={`flex flex-col ${align} relative`}>
                 {idx > 0 && (
                   <div
                     aria-hidden
-                    className="absolute -top-9 left-1/2 -translate-x-1/2 h-9 w-1.5 rounded-full bg-border"
+                    className="absolute -top-10 left-1/2 -translate-x-1/2 h-10 w-1.5 rounded-full bg-border"
                   />
                 )}
+                <div className="flex items-center gap-1 mb-2">
+                  {Array.from({ length: REQUIRED_RUNS }).map((_, i) => (
+                    <Crown
+                      key={i}
+                      className={cn(
+                        "size-5 transition",
+                        i < np.runs ? "text-warning fill-warning" : "text-muted-foreground/30",
+                      )}
+                      strokeWidth={2.5}
+                    />
+                  ))}
+                </div>
                 <NodeButton
                   unlocked={unlocked}
-                  completed={!!completed}
-                  progress={progress}
-                  total={total}
+                  completed={completed}
+                  runs={np.runs}
+                  requiredRuns={REQUIRED_RUNS}
                   emoji={node.emoji}
                   nodeId={node.id}
                   onLockedClick={() => {
@@ -68,7 +79,7 @@ function HomePage() {
                 />
                 <div className={`mt-3 max-w-[14rem] ${idx % 2 === 0 ? "text-left" : "text-right"}`}>
                   <div className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
-                    Nodo {idx + 1}
+                    Nodo {idx + 1} · {np.runs}/{REQUIRED_RUNS} sessioni
                   </div>
                   <div className="font-extrabold text-foreground leading-tight">{node.title}</div>
                   <div className="text-xs text-muted-foreground">{node.subtitle}</div>
@@ -79,7 +90,7 @@ function HomePage() {
         </ol>
 
         <div className="mt-10 text-center text-xs text-muted-foreground">
-          Hai studiato {Object.keys(state.completed).length}/{NODES.length} nodi
+          Hai padroneggiato {NODES.filter((n) => isNodeCompleted(state, n.id)).length}/{NODES.length} nodi
         </div>
       </main>
 
@@ -92,16 +103,16 @@ function HomePage() {
 function NodeButton({
   unlocked,
   completed,
-  progress,
-  total,
+  runs,
+  requiredRuns,
   emoji,
   nodeId,
   onLockedClick,
 }: {
   unlocked: boolean;
   completed: boolean;
-  progress: number;
-  total: number;
+  runs: number;
+  requiredRuns: number;
   emoji: string;
   nodeId: string;
   onLockedClick: () => void;
@@ -110,7 +121,7 @@ function NodeButton({
   const stroke = 8;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
-  const pct = Math.min(1, progress / total);
+  const pct = Math.min(1, runs / requiredRuns);
   const dash = c * pct;
 
   const ring = completed ? "var(--color-success)" : "var(--color-primary)";
@@ -155,14 +166,9 @@ function NodeButton({
       >
         {completed ? <Check className="size-10" strokeWidth={3} /> : <span>{emoji}</span>}
       </span>
-      {!completed && progress === 0 && (
+      {!completed && runs === 0 && (
         <span className="absolute -bottom-2 right-0 grid place-items-center size-8 rounded-full bg-primary text-primary-foreground border-2 border-background">
           <Play className="size-4 fill-current" />
-        </span>
-      )}
-      {completed && (
-        <span className="absolute -top-2 -right-2 grid place-items-center size-8 rounded-full bg-warning text-warning-foreground border-2 border-background">
-          <Star className="size-4 fill-current" />
         </span>
       )}
     </Link>
