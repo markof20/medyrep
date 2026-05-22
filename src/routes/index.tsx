@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { NODES, SUBJECT } from "@/data/medContent";
-import { isNodeUnlocked, useMedStore } from "@/lib/medStore";
+import { NODES, REQUIRED_RUNS, SUBJECT } from "@/data/medContent";
+import { getNodeProgress, isNodeCompleted, isNodeUnlocked, useMedStore } from "@/lib/medStore";
 import { MedHeader } from "@/components/MedHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { NoLivesDialog } from "@/components/NoLivesDialog";
-import { Check, Lock, Play, Star } from "lucide-react";
+import { Check, Crown, Lock, Play } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
