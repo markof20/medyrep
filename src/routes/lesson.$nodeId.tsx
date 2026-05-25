@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
-import { pickSessionQuestions, NODES, SESSION_SIZE, type Question } from "@/data/medContent";
+import { pickSessionQuestions, NODES, SESSION_SIZE, getSubjectByNodeId, type Question } from "@/data/medContent";
 import { getNodeProgress, useMedStore } from "@/lib/medStore";
 import { Button } from "@/components/ui/button";
 import { GlossaryText } from "@/components/GlossaryText";
@@ -21,6 +21,11 @@ function LessonPage() {
   const { nodeId } = Route.useParams();
   const navigate = useNavigate();
   const node = useMemo(() => NODES.find((n) => n.id === nodeId), [nodeId]);
+  const subject = useMemo(() => getSubjectByNodeId(nodeId), [nodeId]);
+  const backTo = () =>
+    subject
+      ? navigate({ to: "/subject/$subjectId", params: { subjectId: subject.id } })
+      : navigate({ to: "/" });
   const { state, addXp, loseLife, recordMistake, finishSession, MAX_LIVES, REQUIRED_RUNS } =
     useMedStore();
 
@@ -100,7 +105,7 @@ function LessonPage() {
         total={total}
         runs={newRuns}
         requiredRuns={REQUIRED_RUNS}
-        onClose={() => navigate({ to: "/" })}
+        onClose={backTo}
       />
     );
   }
@@ -116,7 +121,7 @@ function LessonPage() {
     <div className="min-h-screen bg-background flex flex-col">
       <header className="sticky top-0 z-20 bg-background/90 backdrop-blur px-4 py-3 flex items-center gap-3">
         <button
-          onClick={() => navigate({ to: "/" })}
+          onClick={backTo}
           className="p-2 -ml-2 rounded-full hover:bg-secondary"
           aria-label="Esci"
         >
@@ -276,7 +281,7 @@ function LessonPage() {
         open={showNoLives}
         onOpenChange={(o) => {
           setShowNoLives(o);
-          if (!o && state.lives === 0) navigate({ to: "/" });
+          if (!o && state.lives === 0) backTo();
         }}
       />
     </div>

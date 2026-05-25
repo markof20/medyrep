@@ -1,4 +1,4 @@
-// MedRep — Anatomia Umana data module
+// MedRep — data module
 // Question pools per node are loaded from src/data/nodes/*.ts
 
 export type GlossaryEntry = { term: string; definition: string };
@@ -15,7 +15,6 @@ export type Question =
   | {
       id: string;
       type: "cloze";
-      // prompt contains "___" placeholder for the missing word.
       prompt: string;
       options: string[];
       correctIndex: number;
@@ -49,9 +48,22 @@ export type Node = {
   flashcards: Flashcard[];
 };
 
+export type Subject = {
+  id: string;
+  name: string;
+  emoji: string;
+  description: string;
+  faculty: string;
+  gradient: string; // tailwind gradient classes for the header card
+  accent: string; // tailwind color class for accents
+  nodeIds: string[];
+  comingSoon?: boolean;
+};
+
+// Kept for backward compatibility (used by Leaderboard header).
 export const SUBJECT = {
-  id: "anatomia",
-  name: "Anatomia Umana",
+  id: "medrep",
+  name: "MedRep",
   faculty: "Medicina e Chirurgia",
 };
 
@@ -72,21 +84,83 @@ export const GLOSSARY: GlossaryEntry[] = [
   { term: "surrene", definition: "Ghiandola endocrina posta sopra il rene, produce cortisolo e adrenalina." },
 ];
 
-// Node pools live in separate files for readability.
-// Each pool contains at least 45 questions to support 3 distinct sessions of 15 (no repetitions).
+// Node pools.
 import { locomotore } from "./nodes/locomotore";
 import { cardio } from "./nodes/cardio";
 import { respiratorio } from "./nodes/respiratorio";
 import { nervoso } from "./nodes/nervoso";
 import { digerente } from "./nodes/digerente";
 import { urinario } from "./nodes/urinario";
+import { fisioCardio } from "./nodes/fisio-cardio";
+import { fisioResp } from "./nodes/fisio-resp";
+import { bioMetab } from "./nodes/bio-metab";
+import { bioEnzimi } from "./nodes/bio-enzimi";
 
-export const NODES: Node[] = [locomotore, cardio, respiratorio, nervoso, digerente, urinario];
+export const NODES: Node[] = [
+  locomotore, cardio, respiratorio, nervoso, digerente, urinario,
+  fisioCardio, fisioResp,
+  bioMetab, bioEnzimi,
+];
+
+export const SUBJECTS: Subject[] = [
+  {
+    id: "anatomia",
+    name: "Anatomia Umana",
+    emoji: "🫀",
+    description: "Apparati e sistemi del corpo umano",
+    faculty: "Medicina e Chirurgia",
+    gradient: "from-primary to-primary/70",
+    accent: "text-primary",
+    nodeIds: ["locomotore", "cardio", "respiratorio", "nervoso", "digerente", "urinario"],
+  },
+  {
+    id: "fisiologia",
+    name: "Fisiologia",
+    emoji: "⚙️",
+    description: "Funzioni e regolazione dei sistemi",
+    faculty: "Medicina e Chirurgia",
+    gradient: "from-success to-success/70",
+    accent: "text-success",
+    nodeIds: ["fisio-cardio", "fisio-resp"],
+  },
+  {
+    id: "biochimica",
+    name: "Biochimica",
+    emoji: "🧪",
+    description: "Metabolismo, enzimi e biomolecole",
+    faculty: "Medicina e Chirurgia",
+    gradient: "from-warning to-warning/70",
+    accent: "text-warning-foreground",
+    nodeIds: ["bio-metab", "bio-enzimi"],
+  },
+  {
+    id: "istologia",
+    name: "Istologia",
+    emoji: "🔬",
+    description: "Tessuti e microscopia",
+    faculty: "Medicina e Chirurgia",
+    gradient: "from-accent to-accent/70",
+    accent: "text-accent-foreground",
+    nodeIds: [],
+    comingSoon: true,
+  },
+  {
+    id: "farmacologia",
+    name: "Farmacologia",
+    emoji: "💊",
+    description: "Farmaci, meccanismi e dosaggi",
+    faculty: "Medicina e Chirurgia",
+    gradient: "from-destructive to-destructive/70",
+    accent: "text-destructive",
+    nodeIds: [],
+    comingSoon: true,
+  },
+];
 
 export const REQUIRED_RUNS = 3;
 export const SESSION_SIZE = 15;
 
-// Simulated leaderboard for the same faculty
+// Simulated leaderboard (global XP across all subjects).
 export const LEADERBOARD = [
   { name: "Giulia M.", xp: 1240, avatar: "👩‍⚕️" },
   { name: "Marco T.", xp: 1180, avatar: "🧑‍⚕️" },
@@ -113,7 +187,16 @@ export function findQuestion(qid: string): { node: Node; question: Question } | 
   return undefined;
 }
 
-// Shuffle helper (Fisher-Yates).
+export function getNodesForSubject(subjectId: string): Node[] {
+  const s = SUBJECTS.find((x) => x.id === subjectId);
+  if (!s) return [];
+  return s.nodeIds.map((id) => NODES.find((n) => n.id === id)).filter(Boolean) as Node[];
+}
+
+export function getSubjectByNodeId(nodeId: string): Subject | undefined {
+  return SUBJECTS.find((s) => s.nodeIds.includes(nodeId));
+}
+
 function shuffle<T>(arr: T[]): T[] {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -123,12 +206,6 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-/**
- * Pick `size` random questions from a node's pool, excluding the IDs already
- * answered correctly. If the remaining pool is smaller than `size`, the
- * remainder is topped up from the already-correct pool (re-shuffled), so
- * sessions are always full-length.
- */
 export function pickSessionQuestions(
   nodeId: string,
   alreadyCorrectIds: string[],
