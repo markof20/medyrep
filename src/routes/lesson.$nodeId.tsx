@@ -21,6 +21,11 @@ function LessonPage() {
   const { nodeId } = Route.useParams();
   const navigate = useNavigate();
   const node = useMemo(() => NODES.find((n) => n.id === nodeId), [nodeId]);
+  const subject = useMemo(() => getSubjectByNodeId(nodeId), [nodeId]);
+  const backTo = () =>
+    subject
+      ? navigate({ to: "/subject/$subjectId", params: { subjectId: subject.id } })
+      : navigate({ to: "/" });
   const { state, addXp, loseLife, recordMistake, finishSession, MAX_LIVES, REQUIRED_RUNS } =
     useMedStore();
 
