@@ -58,7 +58,7 @@ export const fisioResp: Node = {
     c("frs-c4","La curva di dissociazione di Hb è ___.",["lineare","sigmoide","iperbolica","piatta"],1,"Forma sigmoide."),
     c("frs-c5","L'asma è una patologia ___.",["restrittiva","ostruttiva","vascolare","infettiva"],1,"Ostruttiva, broncospasmo reversibile."),
     cli("frs-cli1","Paziente con improvvisa dispnea, dolore pleuritico e iperfonesi all'emitorace dx; MV abolito.","Diagnosi più probabile:",["Polmonite","Pneumotorace","Asma","TEP"],1,"Iperfonesi + abolizione MV = PNX."),
-    cli("frs-cli2","EGA: pH 7.30, PCO2 60, HCO3 27. Si tratta di:",["Alcalosi metabolica","Acidosi respiratoria","Acidosi metabolica","Alcalosi respiratoria"],1,"↓pH + ↑PCO2 = acidosi respiratoria."),
+    cli("frs-cli2","EGA: pH 7.30, PCO2 60, HCO3 27.","Si tratta di:",["Alcalosi metabolica","Acidosi respiratoria","Acidosi metabolica","Alcalosi respiratoria"],1,"↓pH + ↑PCO2 = acidosi respiratoria."),
     cli("frs-cli3","Uomo BPCO, dispnea, ronchi diffusi, VEMS/CVF 0.5.","La patologia è:",["Restrittiva","Ostruttiva","Vascolare","Mista"],1,"Tiffeneau <0.7 = ostruttiva."),
   ],
 };

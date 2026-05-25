@@ -58,7 +58,7 @@ export const bioEnzimi: Node = {
     c("be-c4","La pellagra è deficit di vitamina ___.",["B1","B3","B12","C"],1,"B3 / niacina."),
     c("be-c5","I fattori della coagulazione II, VII, IX, X richiedono vitamina ___.",["A","C","D","K"],3,"Vitamina K."),
     cli("be-cli1","Alcolista cronico, confuso, oftalmoplegia, atassia.","Sindrome:",["Korsakoff","Wernicke","Marchiafava","Pellagra"],1,"Wernicke da deficit di B1."),
-    cli("be-cli2","Paziente in warfarin con INR 6, sanguinamenti. Antidoto:",["Vit C","Vit K","Protamina","Naloxone"],1,"Vitamina K antagonizza il warfarin."),
+    cli("be-cli2","Paziente in warfarin con INR 6, sanguinamenti.","Antidoto:",["Vit C","Vit K","Protamina","Naloxone"],1,"Vitamina K antagonizza il warfarin."),
     cli("be-cli3","Vegano stretto da 10 anni con anemia macrocitica e parestesie.","Carenza:",["Ferro","Folato","B12","B6"],2,"B12 da fonti animali; deficit causa anemia + neuropatia."),
   ],
 };
