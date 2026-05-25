@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
-import { pickSessionQuestions, NODES, SESSION_SIZE, type Question } from "@/data/medContent";
+import { pickSessionQuestions, NODES, SESSION_SIZE, getSubjectByNodeId, type Question } from "@/data/medContent";
 import { getNodeProgress, useMedStore } from "@/lib/medStore";
 import { Button } from "@/components/ui/button";
 import { GlossaryText } from "@/components/GlossaryText";
