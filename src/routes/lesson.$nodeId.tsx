@@ -105,7 +105,7 @@ function LessonPage() {
         total={total}
         runs={newRuns}
         requiredRuns={REQUIRED_RUNS}
-        onClose={() => navigate({ to: "/" })}
+        onClose={backTo}
       />
     );
   }
@@ -121,7 +121,7 @@ function LessonPage() {
     <div className="min-h-screen bg-background flex flex-col">
       <header className="sticky top-0 z-20 bg-background/90 backdrop-blur px-4 py-3 flex items-center gap-3">
         <button
-          onClick={() => navigate({ to: "/" })}
+          onClick={backTo}
           className="p-2 -ml-2 rounded-full hover:bg-secondary"
           aria-label="Esci"
         >
@@ -281,7 +281,7 @@ function LessonPage() {
         open={showNoLives}
         onOpenChange={(o) => {
           setShowNoLives(o);
-          if (!o && state.lives === 0) navigate({ to: "/" });
+          if (!o && state.lives === 0) backTo();
         }}
       />
     </div>
