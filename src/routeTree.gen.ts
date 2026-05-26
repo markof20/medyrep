@@ -13,6 +13,7 @@ import { Route as ReviewRouteImport } from './routes/review'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SubjectSubjectIdRouteImport } from './routes/subject.$subjectId'
+import { Route as SubjectSubjectIdNodeNodeIdRouteImport } from './routes/subject.$subjectId.node.$nodeId'
 
 const ReviewRoute = ReviewRouteImport.update({
   id: '/review',
@@ -34,39 +35,64 @@ const SubjectSubjectIdRoute = SubjectSubjectIdRouteImport.update({
   path: '/subject/$subjectId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SubjectSubjectIdNodeNodeIdRoute =
+  SubjectSubjectIdNodeNodeIdRouteImport.update({
+    id: '/node/$nodeId',
+    path: '/node/$nodeId',
+    getParentRoute: () => SubjectSubjectIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/leaderboard': typeof LeaderboardRoute
   '/review': typeof ReviewRoute
-  '/subject/$subjectId': typeof SubjectSubjectIdRoute
+  '/subject/$subjectId': typeof SubjectSubjectIdRouteWithChildren
+  '/subject/$subjectId/node/$nodeId': typeof SubjectSubjectIdNodeNodeIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/leaderboard': typeof LeaderboardRoute
   '/review': typeof ReviewRoute
-  '/subject/$subjectId': typeof SubjectSubjectIdRoute
+  '/subject/$subjectId': typeof SubjectSubjectIdRouteWithChildren
+  '/subject/$subjectId/node/$nodeId': typeof SubjectSubjectIdNodeNodeIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/leaderboard': typeof LeaderboardRoute
   '/review': typeof ReviewRoute
-  '/subject/$subjectId': typeof SubjectSubjectIdRoute
+  '/subject/$subjectId': typeof SubjectSubjectIdRouteWithChildren
+  '/subject/$subjectId/node/$nodeId': typeof SubjectSubjectIdNodeNodeIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/leaderboard' | '/review' | '/subject/$subjectId'
+  fullPaths:
+    | '/'
+    | '/leaderboard'
+    | '/review'
+    | '/subject/$subjectId'
+    | '/subject/$subjectId/node/$nodeId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/leaderboard' | '/review' | '/subject/$subjectId'
-  id: '__root__' | '/' | '/leaderboard' | '/review' | '/subject/$subjectId'
+  to:
+    | '/'
+    | '/leaderboard'
+    | '/review'
+    | '/subject/$subjectId'
+    | '/subject/$subjectId/node/$nodeId'
+  id:
+    | '__root__'
+    | '/'
+    | '/leaderboard'
+    | '/review'
+    | '/subject/$subjectId'
+    | '/subject/$subjectId/node/$nodeId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LeaderboardRoute: typeof LeaderboardRoute
   ReviewRoute: typeof ReviewRoute
-  SubjectSubjectIdRoute: typeof SubjectSubjectIdRoute
+  SubjectSubjectIdRoute: typeof SubjectSubjectIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -99,15 +125,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SubjectSubjectIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/subject/$subjectId/node/$nodeId': {
+      id: '/subject/$subjectId/node/$nodeId'
+      path: '/node/$nodeId'
+      fullPath: '/subject/$subjectId/node/$nodeId'
+      preLoaderRoute: typeof SubjectSubjectIdNodeNodeIdRouteImport
+      parentRoute: typeof SubjectSubjectIdRoute
+    }
   }
 }
+
+interface SubjectSubjectIdRouteChildren {
+  SubjectSubjectIdNodeNodeIdRoute: typeof SubjectSubjectIdNodeNodeIdRoute
+}
+
+const SubjectSubjectIdRouteChildren: SubjectSubjectIdRouteChildren = {
+  SubjectSubjectIdNodeNodeIdRoute: SubjectSubjectIdNodeNodeIdRoute,
+}
+
+const SubjectSubjectIdRouteWithChildren =
+  SubjectSubjectIdRoute._addFileChildren(SubjectSubjectIdRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LeaderboardRoute: LeaderboardRoute,
   ReviewRoute: ReviewRoute,
-  SubjectSubjectIdRoute: SubjectSubjectIdRoute,
+  SubjectSubjectIdRoute: SubjectSubjectIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
