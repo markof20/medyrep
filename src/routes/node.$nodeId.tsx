@@ -31,10 +31,10 @@ export const Route = createFileRoute("/node/$nodeId")({
 });
 
 function NodePage() {
-  const { subjectId, nodeId } = Route.useParams();
+  const { nodeId } = Route.useParams();
   const navigate = useNavigate();
-  const subject = useMemo(() => SUBJECTS.find((s) => s.id === subjectId), [subjectId]);
   const node = useMemo(() => getNodeById(nodeId), [nodeId]);
+  const subject = useMemo(() => getSubjectByNodeId(nodeId), [nodeId]);
   const { state } = useMedStore();
   const [showNoLives, setShowNoLives] = useState(false);
 
