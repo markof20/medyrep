@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
-  SUBJECTS,
   getNodeById,
+  getSubjectByNodeId,
   LEVELS_PER_NODE,
   QUESTIONS_PER_LEVEL,
 } from "@/data/medContent";
