@@ -13,6 +13,7 @@ import { Route as ReviewRouteImport } from './routes/review'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SubjectSubjectIdRouteImport } from './routes/subject.$subjectId'
+import { Route as LessonNodeIdLevelIdRouteImport } from './routes/lesson.$nodeId.$levelId'
 import { Route as SubjectSubjectIdNodeNodeIdRouteImport } from './routes/subject.$subjectId.node.$nodeId'
 
 const ReviewRoute = ReviewRouteImport.update({
@@ -35,6 +36,11 @@ const SubjectSubjectIdRoute = SubjectSubjectIdRouteImport.update({
   path: '/subject/$subjectId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LessonNodeIdLevelIdRoute = LessonNodeIdLevelIdRouteImport.update({
+  id: '/lesson/$nodeId/$levelId',
+  path: '/lesson/$nodeId/$levelId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SubjectSubjectIdNodeNodeIdRoute =
   SubjectSubjectIdNodeNodeIdRouteImport.update({
     id: '/node/$nodeId',
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/leaderboard': typeof LeaderboardRoute
   '/review': typeof ReviewRoute
   '/subject/$subjectId': typeof SubjectSubjectIdRouteWithChildren
+  '/lesson/$nodeId/$levelId': typeof LessonNodeIdLevelIdRoute
   '/subject/$subjectId/node/$nodeId': typeof SubjectSubjectIdNodeNodeIdRoute
 }
 export interface FileRoutesByTo {
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/leaderboard': typeof LeaderboardRoute
   '/review': typeof ReviewRoute
   '/subject/$subjectId': typeof SubjectSubjectIdRouteWithChildren
+  '/lesson/$nodeId/$levelId': typeof LessonNodeIdLevelIdRoute
   '/subject/$subjectId/node/$nodeId': typeof SubjectSubjectIdNodeNodeIdRoute
 }
 export interface FileRoutesById {
@@ -62,6 +70,7 @@ export interface FileRoutesById {
   '/leaderboard': typeof LeaderboardRoute
   '/review': typeof ReviewRoute
   '/subject/$subjectId': typeof SubjectSubjectIdRouteWithChildren
+  '/lesson/$nodeId/$levelId': typeof LessonNodeIdLevelIdRoute
   '/subject/$subjectId/node/$nodeId': typeof SubjectSubjectIdNodeNodeIdRoute
 }
 export interface FileRouteTypes {
@@ -71,6 +80,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/review'
     | '/subject/$subjectId'
+    | '/lesson/$nodeId/$levelId'
     | '/subject/$subjectId/node/$nodeId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -78,6 +88,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/review'
     | '/subject/$subjectId'
+    | '/lesson/$nodeId/$levelId'
     | '/subject/$subjectId/node/$nodeId'
   id:
     | '__root__'
@@ -85,6 +96,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/review'
     | '/subject/$subjectId'
+    | '/lesson/$nodeId/$levelId'
     | '/subject/$subjectId/node/$nodeId'
   fileRoutesById: FileRoutesById
 }
@@ -93,6 +105,7 @@ export interface RootRouteChildren {
   LeaderboardRoute: typeof LeaderboardRoute
   ReviewRoute: typeof ReviewRoute
   SubjectSubjectIdRoute: typeof SubjectSubjectIdRouteWithChildren
+  LessonNodeIdLevelIdRoute: typeof LessonNodeIdLevelIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -125,6 +138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SubjectSubjectIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lesson/$nodeId/$levelId': {
+      id: '/lesson/$nodeId/$levelId'
+      path: '/lesson/$nodeId/$levelId'
+      fullPath: '/lesson/$nodeId/$levelId'
+      preLoaderRoute: typeof LessonNodeIdLevelIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/subject/$subjectId/node/$nodeId': {
       id: '/subject/$subjectId/node/$nodeId'
       path: '/node/$nodeId'
@@ -151,6 +171,7 @@ const rootRouteChildren: RootRouteChildren = {
   LeaderboardRoute: LeaderboardRoute,
   ReviewRoute: ReviewRoute,
   SubjectSubjectIdRoute: SubjectSubjectIdRouteWithChildren,
+  LessonNodeIdLevelIdRoute: LessonNodeIdLevelIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
