@@ -35,11 +35,8 @@ function LessonPage() {
   const subject = useMemo(() => getSubjectByNodeId(nodeId), [nodeId]);
 
   const backTo = () => {
-    if (subject && node) {
-      navigate({
-        to: "/subject/$subjectId/node/$nodeId",
-        params: { subjectId: subject.id, nodeId: node.id },
-      });
+    if (node) {
+      navigate({ to: "/node/$nodeId", params: { nodeId: node.id } });
     } else {
       navigate({ to: "/" });
     }
