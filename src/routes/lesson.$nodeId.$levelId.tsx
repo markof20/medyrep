@@ -32,7 +32,7 @@ function LessonPage() {
   const navigate = useNavigate();
   const node = useMemo(() => getNodeById(nodeId), [nodeId]);
   const level = useMemo(() => getLevel(nodeId, levelId), [nodeId, levelId]);
-  const subject = useMemo(() => getSubjectByNodeId(nodeId), [nodeId]);
+  // subject lookup intentionally omitted; back navigation uses node only
 
   const backTo = () => {
     if (node) {
