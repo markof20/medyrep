@@ -189,7 +189,8 @@ function FlashcardsTab() {
     const ids: string[] = [];
     for (let i = 0; i < NODES.length; i++) {
       const id = NODES[i].id;
-      const prevDone = i === 0 || (state.nodeProgress[NODES[i - 1].id]?.runs ?? 0) > 0;
+      const prevDone =
+        i === 0 || (state.nodeProgress[NODES[i - 1].id]?.completedLevels.length ?? 0) > 0;
       if (prevDone) ids.push(id);
     }
     return ids;
