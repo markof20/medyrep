@@ -18,7 +18,7 @@ import { NoLivesDialog } from "@/components/NoLivesDialog";
 import { ArrowLeft, Check, Lock, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/subject/$subjectId/node/$nodeId")({
+export const Route = createFileRoute("/node/$nodeId")({
   component: NodePage,
   notFoundComponent: () => (
     <div className="p-8 text-center">
