@@ -1,47 +1,59 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
-import { pickSessionQuestions, NODES, SESSION_SIZE, getSubjectByNodeId, type Question } from "@/data/medContent";
+import {
+  pickLevelQuestions,
+  getNodeById,
+  getLevel,
+  
+  LEVELS_PER_NODE,
+  type Question,
+} from "@/data/medContent";
 import { getNodeProgress, useMedStore } from "@/lib/medStore";
 import { Button } from "@/components/ui/button";
 import { GlossaryText } from "@/components/GlossaryText";
 import { NoLivesDialog } from "@/components/NoLivesDialog";
-import { ArrowLeft, Check, Crown, Heart, X, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, Heart, X, Sparkles, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/lesson/$nodeId")({
+export const Route = createFileRoute("/lesson/$nodeId/$levelId")({
   component: LessonPage,
   notFoundComponent: () => (
     <div className="p-8 text-center">
-      Nodo non trovato. <Link to="/" className="text-primary underline">Torna al percorso</Link>
+      Livello non trovato.{" "}
+      <Link to="/" className="text-primary underline">
+        Torna al percorso
+      </Link>
     </div>
   ),
 });
 
 function LessonPage() {
-  const { nodeId } = Route.useParams();
+  const { nodeId, levelId } = Route.useParams();
   const navigate = useNavigate();
-  const node = useMemo(() => NODES.find((n) => n.id === nodeId), [nodeId]);
-  const subject = useMemo(() => getSubjectByNodeId(nodeId), [nodeId]);
-  const backTo = () =>
-    subject
-      ? navigate({ to: "/subject/$subjectId", params: { subjectId: subject.id } })
-      : navigate({ to: "/" });
-  const { state, addXp, loseLife, recordMistake, finishSession, MAX_LIVES, REQUIRED_RUNS } =
-    useMedStore();
+  const node = useMemo(() => getNodeById(nodeId), [nodeId]);
+  const level = useMemo(() => getLevel(nodeId, levelId), [nodeId, levelId]);
+  // subject lookup intentionally omitted; back navigation uses node only
 
-  // Pick 15 questions once, excluding the ones already answered correctly
-  // in previous runs of this node.
+  const backTo = () => {
+    if (node) {
+      navigate({ to: "/node/$nodeId", params: { nodeId: node.id } });
+    } else {
+      navigate({ to: "/" });
+    }
+  };
+
+  const { state, addXp, loseLife, recordMistake, finishLevel, MAX_LIVES } = useMedStore();
+
   const questions = useMemo(() => {
-    if (!node) return [] as Question[];
-    const np = getNodeProgress(state, node.id);
-    return pickSessionQuestions(node.id, np.correctIds, SESSION_SIZE);
-    // we intentionally don't depend on state changes — keep the same set for this session
+    if (!node || !level) return [] as Question[];
+    return pickLevelQuestions(node.id, level.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodeId]);
+  }, [nodeId, levelId]);
 
   const total = questions.length;
   const [idx, setIdx] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
+  const [tfChoice, setTfChoice] = useState<boolean | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongCount, setWrongCount] = useState(0);
@@ -53,18 +65,17 @@ function LessonPage() {
     if (state.lives === 0 && !done) setShowNoLives(true);
   }, [state.lives, done]);
 
-  if (!node || total === 0) return null;
+  if (!node || !level || total === 0) return null;
 
   const q = questions[idx];
   const correctIndex =
-    q.type === "multiple" || q.type === "clinical" || q.type === "cloze"
-      ? q.correctIndex
-      : null;
+    q.type === "multiple" || q.type === "clinical" || q.type === "cloze" ? q.correctIndex : null;
 
   function isAnswerSelected() {
-    return selected !== null;
+    return q.type === "truefalse" ? tfChoice !== null : selected !== null;
   }
   function isCorrect(): boolean {
+    if (q.type === "truefalse") return tfChoice === q.answer;
     if (correctIndex === null) return false;
     return selected === correctIndex;
   }
@@ -86,25 +97,26 @@ function LessonPage() {
 
   function handleNext() {
     if (idx + 1 >= total) {
-      finishSession(node!.id, sessionCorrectIds);
-      if (correctCount === total) addXp(20); // perfect bonus
+      finishLevel(node!.id, level!.id, sessionCorrectIds);
+      if (correctCount === total) addXp(20);
       setDone(true);
       return;
     }
     setIdx((i) => i + 1);
     setSelected(null);
+    setTfChoice(null);
     setSubmitted(false);
   }
 
   if (done) {
-    const newRuns = Math.min(REQUIRED_RUNS, getNodeProgress(state, node.id).runs);
+    const np = getNodeProgress(state, node.id);
     return (
       <FinishScreen
         correct={correctCount}
         wrong={wrongCount}
         total={total}
-        runs={newRuns}
-        requiredRuns={REQUIRED_RUNS}
+        completedLevels={Math.min(LEVELS_PER_NODE, np.completedLevels.length)}
+        totalLevels={LEVELS_PER_NODE}
         onClose={backTo}
       />
     );
@@ -115,16 +127,14 @@ function LessonPage() {
       ? "Caso clinico"
       : q.type === "cloze"
         ? "Riempi lo spazio"
-        : "Scelta multipla";
+        : q.type === "truefalse"
+          ? "Vero o Falso"
+          : "Scelta multipla";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="sticky top-0 z-20 bg-background/90 backdrop-blur px-4 py-3 flex items-center gap-3">
-        <button
-          onClick={backTo}
-          className="p-2 -ml-2 rounded-full hover:bg-secondary"
-          aria-label="Esci"
-        >
+        <button onClick={backTo} className="p-2 -ml-2 rounded-full hover:bg-secondary" aria-label="Esci">
           <X className="size-6" />
         </button>
         <div className="flex-1 h-3 rounded-full bg-secondary overflow-hidden">
@@ -145,7 +155,7 @@ function LessonPage() {
       <main className="flex-1 mx-auto max-w-md w-full px-4 py-4">
         <div className="flex items-center justify-between mb-2">
           <div className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">
-            {typeLabel}
+            {level.title} · {typeLabel}
           </div>
           <div className="text-xs font-extrabold text-muted-foreground">
             {idx + 1} / {total}
@@ -167,44 +177,69 @@ function LessonPage() {
           </h2>
         )}
 
-        <ul className={cn("space-y-3", q.type === "cloze" && "grid grid-cols-2 gap-3 space-y-0")}>
-          {(q as Exclude<Question, { type: "truefalse" }>).options.map((opt, i) => {
-            const isSel = selected === i;
-            const showCorrect = submitted && correctIndex === i;
-            const showWrong = submitted && isSel && i !== correctIndex;
-            return (
-              <li key={i}>
+        {q.type === "truefalse" ? (
+          <div className="grid grid-cols-2 gap-3">
+            {[true, false].map((v) => {
+              const isSel = tfChoice === v;
+              const showCorrect = submitted && v === q.answer;
+              const showWrong = submitted && tfChoice === v && v !== q.answer;
+              return (
                 <button
+                  key={String(v)}
                   disabled={submitted}
-                  onClick={() => setSelected(i)}
+                  onClick={() => setTfChoice(v)}
                   className={cn(
-                    "btn-pop w-full border-2 bg-card p-4 text-left font-bold transition flex items-center gap-3",
-                    q.type === "cloze" && "justify-center text-center",
+                    "btn-pop border-2 bg-card p-4 font-extrabold text-lg",
                     isSel ? "border-primary bg-primary/10" : "border-border",
                     showCorrect && "border-success bg-success/15",
                     showWrong && "border-destructive bg-destructive/10",
                   )}
                 >
-                  {q.type !== "cloze" && (
-                    <span
-                      className={cn(
-                        "grid place-items-center size-7 rounded-lg border-2 font-extrabold text-sm shrink-0",
-                        isSel ? "border-primary text-primary" : "border-border text-muted-foreground",
-                        showCorrect && "border-success text-success bg-success/10",
-                        showWrong && "border-destructive text-destructive bg-destructive/10",
-                      )}
-                    >
-                      {String.fromCharCode(65 + i)}
-                    </span>
-                  )}
-                  <span className="flex-1">
-                    <GlossaryText text={opt} className="inline" />
-                  </span>
+                  {v ? "Vero" : "Falso"}
                 </button>
-              </li>
-            );
-          })}
-        </ul>
+              );
+            })}
+          </div>
+        ) : (
+          <ul className={cn("space-y-3", q.type === "cloze" && "grid grid-cols-2 gap-3 space-y-0")}>
+            {(q as Exclude<Question, { type: "truefalse" }>).options.map((opt, i) => {
+              const isSel = selected === i;
+              const showCorrect = submitted && correctIndex === i;
+              const showWrong = submitted && isSel && i !== correctIndex;
+              return (
+                <li key={i}>
+                  <button
+                    disabled={submitted}
+                    onClick={() => setSelected(i)}
+                    className={cn(
+                      "btn-pop w-full border-2 bg-card p-4 text-left font-bold transition flex items-center gap-3",
+                      q.type === "cloze" && "justify-center text-center",
+                      isSel ? "border-primary bg-primary/10" : "border-border",
+                      showCorrect && "border-success bg-success/15",
+                      showWrong && "border-destructive bg-destructive/10",
+                    )}
+                  >
+                    {q.type !== "cloze" && (
+                      <span
+                        className={cn(
+                          "grid place-items-center size-7 rounded-lg border-2 font-extrabold text-sm shrink-0",
+                          isSel ? "border-primary text-primary" : "border-border text-muted-foreground",
+                          showCorrect && "border-success text-success bg-success/10",
+                          showWrong && "border-destructive text-destructive bg-destructive/10",
+                        )}
+                      >
+                        {String.fromCharCode(65 + i)}
+                      </span>
+                    )}
+                    <span className="flex-1">
+                      <GlossaryText text={opt} className="inline" />
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </main>
 
       {!submitted && (
@@ -251,12 +286,17 @@ function LessonPage() {
                 >
                   {isCorrect() ? "Risposta corretta!" : "Sbagliato"}
                 </div>
-                {!isCorrect() && correctIndex !== null && (
+                {!isCorrect() && q.type !== "truefalse" && correctIndex !== null && (
                   <div className="text-xs text-muted-foreground">
                     Risposta corretta:{" "}
                     <b className="text-foreground">
                       {(q as Exclude<Question, { type: "truefalse" }>).options[correctIndex]}
                     </b>
+                  </div>
+                )}
+                {!isCorrect() && q.type === "truefalse" && (
+                  <div className="text-xs text-muted-foreground">
+                    Risposta corretta: <b className="text-foreground">{q.answer ? "Vero" : "Falso"}</b>
                   </div>
                 )}
               </div>
@@ -271,7 +311,7 @@ function LessonPage() {
               )}
               onClick={handleNext}
             >
-              {idx + 1 >= total ? "Termina sessione" : "Continua"}
+              {idx + 1 >= total ? "Termina livello" : "Continua"}
             </Button>
           </div>
         </div>
@@ -289,7 +329,6 @@ function LessonPage() {
 }
 
 function ClozePrompt({ prompt }: { prompt: string }) {
-  // Split by ___ and render the blank as a styled placeholder.
   const parts = prompt.split("___");
   return (
     <h2 className="text-xl font-extrabold leading-tight mb-5">
@@ -311,40 +350,40 @@ function FinishScreen({
   correct,
   wrong,
   total,
-  runs,
-  requiredRuns,
+  completedLevels,
+  totalLevels,
   onClose,
 }: {
   correct: number;
   wrong: number;
   total: number;
-  runs: number;
-  requiredRuns: number;
+  completedLevels: number;
+  totalLevels: number;
   onClose: () => void;
 }) {
   const xpEarned = correct * 10 + (correct === total ? 20 : 0);
   const accuracy = Math.round((correct / total) * 100);
-  const completed = runs >= requiredRuns;
+  const nodeDone = completedLevels >= totalLevels;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/15 to-background flex flex-col items-center justify-center p-6 text-center">
-      <div className="text-7xl animate-pop-in">{completed ? "🏆" : correct === total ? "🌟" : "🎉"}</div>
+      <div className="text-7xl animate-pop-in">{nodeDone ? "🏆" : correct === total ? "🌟" : "🎉"}</div>
       <h1 className="text-3xl font-extrabold mt-4 animate-pop-in">
-        {completed ? "Livello padroneggiato!" : "Sessione completata!"}
+        {nodeDone ? "Nodo padroneggiato!" : "Livello completato!"}
       </h1>
       <p className="text-muted-foreground mt-1">
-        {completed
-          ? "Hai completato tutte e 3 le sessioni richieste."
-          : `Sessione ${runs} di ${requiredRuns} completata.`}
+        {nodeDone
+          ? "Hai completato tutti i livelli di questo nodo."
+          : `${completedLevels} di ${totalLevels} livelli completati.`}
       </p>
 
       <div className="mt-6 flex items-center gap-2">
-        {Array.from({ length: requiredRuns }).map((_, i) => (
-          <Crown
+        {Array.from({ length: totalLevels }).map((_, i) => (
+          <Star
             key={i}
             className={cn(
-              "size-9 transition",
-              i < runs ? "text-warning fill-warning" : "text-muted-foreground/30",
+              "size-8 transition",
+              i < completedLevels ? "text-warning fill-warning" : "text-muted-foreground/30",
             )}
             strokeWidth={2.5}
           />
@@ -376,7 +415,7 @@ function FinishScreen({
         onClick={onClose}
         className="mt-10 w-full max-w-sm h-14 text-lg btn-pop bg-primary text-primary-foreground hover:bg-primary border-primary-foreground/20"
       >
-        <ArrowLeft className="size-5 mr-2" /> Torna al percorso
+        <ArrowLeft className="size-5 mr-2" /> Torna al nodo
       </Button>
     </div>
   );
