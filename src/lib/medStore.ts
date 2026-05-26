@@ -1,13 +1,13 @@
 import { useEffect, useState, useCallback } from "react";
-import { REQUIRED_RUNS } from "@/data/medContent";
+import { LEVELS_PER_NODE } from "@/data/medContent";
 
-const KEY = "medrep:state:v2";
+const KEY = "medrep:state:v3";
 const MAX_LIVES = 5;
-const LIFE_REGEN_MS = 30 * 60 * 1000; // 30 min per life
+const LIFE_REGEN_MS = 30 * 60 * 1000;
 
 export type NodeProgress = {
-  runs: number; // completed sessions of 15 questions (0..REQUIRED_RUNS)
-  correctIds: string[]; // question ids ever answered correctly in this node
+  completedLevels: string[]; // ids of completed levels (e.g. ["L1","L2"])
+  correctIds: string[]; // question ids answered correctly (for review)
 };
 
 export type MedState = {
@@ -18,9 +18,8 @@ export type MedState = {
   lastLifeLossAt: number | null;
   streak: number;
   lastStudyDay: string | null;
-  // New per-node progress (runs + correctly-answered question ids).
   nodeProgress: Record<string, NodeProgress>;
-  mistakes: string[]; // question ids ever answered wrong (review queue)
+  mistakes: string[];
 };
 
 function getMonday(d = new Date()): number {
@@ -137,35 +136,39 @@ export function useMedStore() {
     setState((s) => ({ ...s, mistakes: s.mistakes.filter((x) => x !== qid) }));
   }, []);
 
-  /**
-   * Records the end of a session: stores newly-correct question ids and
-   * increments the runs counter (capped at REQUIRED_RUNS).
-   */
-  const finishSession = useCallback((nodeId: string, sessionCorrectIds: string[]) => {
-    setState((s) => {
-      const prev = s.nodeProgress[nodeId] ?? { runs: 0, correctIds: [] };
-      const correctIds = Array.from(new Set([...prev.correctIds, ...sessionCorrectIds]));
-      const runs = Math.min(REQUIRED_RUNS, prev.runs + 1);
-      const nodeProgress = { ...s.nodeProgress, [nodeId]: { runs, correctIds } };
+  /** Marks a level as completed and persists newly-correct question ids. */
+  const finishLevel = useCallback(
+    (nodeId: string, levelId: string, sessionCorrectIds: string[]) => {
+      setState((s) => {
+        const prev = s.nodeProgress[nodeId] ?? { completedLevels: [], correctIds: [] };
+        const completedLevels = prev.completedLevels.includes(levelId)
+          ? prev.completedLevels
+          : [...prev.completedLevels, levelId];
+        const correctIds = Array.from(new Set([...prev.correctIds, ...sessionCorrectIds]));
+        const nodeProgress = {
+          ...s.nodeProgress,
+          [nodeId]: { completedLevels, correctIds },
+        };
 
-      // streak update
-      const t = todayStr();
-      let streak = s.streak;
-      let lastStudyDay = s.lastStudyDay;
-      if (lastStudyDay !== t) {
-        if (lastStudyDay) {
-          const prevDay = new Date(lastStudyDay);
-          const today = new Date(t);
-          const diff = Math.round((today.getTime() - prevDay.getTime()) / 86400000);
-          streak = diff === 1 ? streak + 1 : 1;
-        } else {
-          streak = 1;
+        const t = todayStr();
+        let streak = s.streak;
+        let lastStudyDay = s.lastStudyDay;
+        if (lastStudyDay !== t) {
+          if (lastStudyDay) {
+            const prevDay = new Date(lastStudyDay);
+            const today = new Date(t);
+            const diff = Math.round((today.getTime() - prevDay.getTime()) / 86400000);
+            streak = diff === 1 ? streak + 1 : 1;
+          } else {
+            streak = 1;
+          }
+          lastStudyDay = t;
         }
-        lastStudyDay = t;
-      }
-      return { ...s, nodeProgress, streak, lastStudyDay };
-    });
-  }, []);
+        return { ...s, nodeProgress, streak, lastStudyDay };
+      });
+    },
+    [],
+  );
 
   const reset = useCallback(() => {
     setState(() => defaultState());
@@ -178,19 +181,40 @@ export function useMedStore() {
     refillLives,
     recordMistake,
     removeMistake,
-    finishSession,
+    finishLevel,
     reset,
     MAX_LIVES,
-    REQUIRED_RUNS,
+    LEVELS_PER_NODE,
   };
 }
 
 export function getNodeProgress(state: MedState, nodeId: string): NodeProgress {
-  return state.nodeProgress[nodeId] ?? { runs: 0, correctIds: [] };
+  return state.nodeProgress[nodeId] ?? { completedLevels: [], correctIds: [] };
+}
+
+export function isLevelCompleted(state: MedState, nodeId: string, levelId: string): boolean {
+  return getNodeProgress(state, nodeId).completedLevels.includes(levelId);
+}
+
+/** A level is unlocked when its index is 0 or the previous level is done. */
+export function isLevelUnlocked(
+  state: MedState,
+  nodeId: string,
+  levelIds: string[],
+  levelId: string,
+): boolean {
+  const idx = levelIds.indexOf(levelId);
+  if (idx <= 0) return true;
+  return isLevelCompleted(state, nodeId, levelIds[idx - 1]);
 }
 
 export function isNodeCompleted(state: MedState, nodeId: string): boolean {
-  return getNodeProgress(state, nodeId).runs >= REQUIRED_RUNS;
+  return getNodeProgress(state, nodeId).completedLevels.length >= LEVELS_PER_NODE;
+}
+
+export function nodeProgressRatio(state: MedState, nodeId: string): number {
+  const done = getNodeProgress(state, nodeId).completedLevels.length;
+  return Math.min(1, done / LEVELS_PER_NODE);
 }
 
 export function isNodeUnlocked(state: MedState, nodeIds: string[], nodeId: string): boolean {
