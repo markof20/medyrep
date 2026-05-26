@@ -57,7 +57,7 @@ function NodePage() {
       <MedHeader />
       <main className="mx-auto max-w-md px-4 pt-4">
         <button
-          onClick={() => navigate({ to: "/subject/$subjectId", params: { subjectId } })}
+          onClick={() => (subject ? navigate({ to: "/subject/$subjectId", params: { subjectId: subject.id } }) : navigate({ to: "/" }))}
           className="flex items-center gap-1 text-sm font-extrabold text-muted-foreground mb-3 hover:text-foreground"
         >
           <ArrowLeft className="size-4" /> {subject.name}
