@@ -162,8 +162,8 @@ function SubjectPage() {
             return (
               <li key={node.id}>
                 <Link
-                  to="/subject/$subjectId/node/$nodeId"
-                  params={{ subjectId: subject.id, nodeId: node.id }}
+                  to="/node/$nodeId"
+                  params={{ nodeId: node.id }}
                   className="block"
                 >
                   {Body}
