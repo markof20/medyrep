@@ -4,7 +4,7 @@ import {
   pickLevelQuestions,
   getNodeById,
   getLevel,
-  getSubjectByNodeId,
+  
   LEVELS_PER_NODE,
   type Question,
 } from "@/data/medContent";
