@@ -110,21 +110,28 @@ function SubjectPage() {
                   !unlocked && "opacity-60",
                 )}
               >
-                {/* Stars above */}
-                <div className="flex items-center gap-0.5 mb-0.5">
-                  {Array.from({ length: LEVELS_PER_NODE }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={cn(
-                        "size-2.5",
-                        i < doneLevels
-                          ? "text-warning fill-warning"
-                          : "text-muted-foreground/30",
-                      )}
-                      strokeWidth={2.5}
-                    />
-                  ))}
-                </div>
+                {/* Stars above (only for standard nodes) */}
+                {!review && (
+                  <div className="flex items-center gap-0.5 mb-0.5">
+                    {Array.from({ length: totalLevels }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={cn(
+                          "size-2.5",
+                          i < doneLevels
+                            ? "text-warning fill-warning"
+                            : "text-muted-foreground/30",
+                        )}
+                        strokeWidth={2.5}
+                      />
+                    ))}
+                  </div>
+                )}
+                {review && (
+                  <div className="mb-0.5 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-warning/20 text-warning-foreground">
+                    Ripasso
+                  </div>
+                )}
 
                 {/* Circular node */}
                 <div className="relative">
@@ -149,7 +156,11 @@ function SubjectPage() {
                       r="36"
                       fill="none"
                       className={cn(
-                        completed ? "stroke-success" : "stroke-primary",
+                        completed
+                          ? "stroke-success"
+                          : review
+                            ? "stroke-warning"
+                            : "stroke-primary",
                       )}
                       strokeWidth="4"
                       strokeLinecap="round"
@@ -161,12 +172,15 @@ function SubjectPage() {
                   <div
                     className={cn(
                       "grid place-items-center size-20 rounded-full text-3xl bg-gradient-to-br text-primary-foreground node-shadow border-4 border-background",
-                      completed ? "from-success to-success/70" : subject.gradient,
+                      completed ? "from-success to-success/70" : nodeGradient,
+                      review && !completed && "ring-4 ring-warning/30",
                     )}
                   >
                     {unlocked ? (
                       completed ? (
                         <Check className="size-9" strokeWidth={3} />
+                      ) : review ? (
+                        <Brain className="size-9" strokeWidth={2.5} />
                       ) : (
                         <span>{node.emoji}</span>
                       )
@@ -179,7 +193,7 @@ function SubjectPage() {
                 {/* Label */}
                 <div className="text-center mt-1 px-2 max-w-[180px]">
                   <div className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
-                    Nodo {idx + 1}
+                    {review ? `Ripasso ${reviewIdx}` : `Nodo ${standardIdx}`}
                   </div>
                   <div className="font-extrabold text-sm text-foreground leading-tight truncate">
                     {node.title}
@@ -187,6 +201,7 @@ function SubjectPage() {
                 </div>
               </div>
             );
+
 
             return (
               <li
