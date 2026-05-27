@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { LEVELS_PER_NODE } from "@/data/medContent";
+import { LEVELS_PER_NODE, getNodeById } from "@/data/medContent";
 
 const KEY = "medrep:state:v3";
 const MAX_LIVES = 5;
@@ -209,13 +209,18 @@ export function isLevelUnlocked(
 }
 
 export function isNodeCompleted(state: MedState, nodeId: string): boolean {
-  return getNodeProgress(state, nodeId).completedLevels.length >= LEVELS_PER_NODE;
+  const node = getNodeById(nodeId);
+  const total = node?.levels.length ?? LEVELS_PER_NODE;
+  return getNodeProgress(state, nodeId).completedLevels.length >= total;
 }
 
 export function nodeProgressRatio(state: MedState, nodeId: string): number {
+  const node = getNodeById(nodeId);
+  const total = node?.levels.length ?? LEVELS_PER_NODE;
   const done = getNodeProgress(state, nodeId).completedLevels.length;
-  return Math.min(1, done / LEVELS_PER_NODE);
+  return Math.min(1, done / total);
 }
+
 
 export function isNodeUnlocked(state: MedState, nodeIds: string[], nodeId: string): boolean {
   const idx = nodeIds.indexOf(nodeId);

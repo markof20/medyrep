@@ -55,7 +55,10 @@ export type Node = {
   emoji: string;
   levels: Level[];
   flashcards: Flashcard[];
+  kind?: "standard" | "review";
+  sourceNodeIds?: string[];
 };
+
 
 export type Subject = {
   id: string;
@@ -85,15 +88,31 @@ export const GLOSSARY: GlossaryEntry[] = [
 ];
 
 import { CURRICULUM } from "./curriculum";
-import { buildNodes } from "./generator";
+import { buildNodes, buildReviewNode } from "./generator";
 
 const FACULTY = "Medicina e Chirurgia";
 
-const builtNodes: Node[] = CURRICULUM.flatMap((s) => buildNodes(s));
+export const REVIEW_EVERY = 4; // insert a review node every N standard nodes
 
-export const NODES: Node[] = builtNodes;
+// Build standard nodes per subject, then interleave a review node every N.
+const interleaved = CURRICULUM.map((s) => {
+  const standardNodes = buildNodes(s);
+  const out: Node[] = [];
+  let reviewIdx = 0;
+  for (let i = 0; i < standardNodes.length; i++) {
+    out.push(standardNodes[i]);
+    if ((i + 1) % REVIEW_EVERY === 0) {
+      reviewIdx += 1;
+      const sources = standardNodes.slice(i - REVIEW_EVERY + 1, i + 1);
+      out.push(buildReviewNode(s, reviewIdx, sources));
+    }
+  }
+  return { subject: s, nodes: out };
+});
 
-export const SUBJECTS: Subject[] = CURRICULUM.map((s) => ({
+export const NODES: Node[] = interleaved.flatMap((x) => x.nodes);
+
+export const SUBJECTS: Subject[] = interleaved.map(({ subject: s, nodes }) => ({
   id: s.id,
   name: s.name,
   emoji: s.emoji,
@@ -101,12 +120,21 @@ export const SUBJECTS: Subject[] = CURRICULUM.map((s) => ({
   faculty: FACULTY,
   gradient: s.gradient,
   accent: s.accent,
-  nodeIds: s.nodes.map((n) => n.id),
+  nodeIds: nodes.map((n) => n.id),
 }));
 
 export const LEVELS_PER_NODE = 5;
 export const QUESTIONS_PER_LEVEL = 15;
 export const SESSION_SIZE = QUESTIONS_PER_LEVEL;
+
+export function isReviewNode(node: Node): boolean {
+  return node.kind === "review";
+}
+
+export function getNodeLevelCount(node: Node): number {
+  return node.levels.length;
+}
+
 
 // Simulated leaderboard (global XP across all subjects).
 export const LEADERBOARD = [

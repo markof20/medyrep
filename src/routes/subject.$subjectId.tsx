@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { SUBJECTS, getNodesForSubject, LEVELS_PER_NODE } from "@/data/medContent";
+import { SUBJECTS, getNodesForSubject, LEVELS_PER_NODE, isReviewNode } from "@/data/medContent";
 import {
   getNodeProgress,
   isNodeCompleted,
@@ -10,8 +10,9 @@ import {
 import { MedHeader } from "@/components/MedHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { NoLivesDialog } from "@/components/NoLivesDialog";
-import { ArrowLeft, Check, Lock, Star } from "lucide-react";
+import { ArrowLeft, Check, Lock, Star, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/subject/$subjectId")({
   component: SubjectPage,
@@ -67,20 +68,39 @@ function SubjectPage() {
           <h1 className="text-2xl font-extrabold mt-0.5">{subject.name}</h1>
           <p className="text-sm opacity-90 mt-1">{subject.description}</p>
           <div className="mt-3 text-[11px] font-extrabold uppercase tracking-wider opacity-90">
-            {nodes.length} nodi · {LEVELS_PER_NODE} livelli ciascuno
+            {nodes.filter((n) => !isReviewNode(n)).length} nodi · {LEVELS_PER_NODE} livelli ciascuno · ripasso ogni 4
           </div>
         </div>
 
         <ol className="relative pt-2 pb-6">
           {nodes.map((node, idx) => {
-            const offsets = [0, 72, 96, 72, 0, -72, -96, -72];
-            const dx = offsets[idx % offsets.length];
+            // Path is grouped in blocks of 5 (4 standard + 1 review).
+            // Standard nodes alternate sides between groups; the review
+            // node at position 4 always sits at the center (dx = 0).
+            const group = Math.floor(idx / 5);
+            const pos = idx % 5;
+            const side = group % 2 === 0 ? 1 : -1;
+            const baseOffsets = [60, 100, 100, 60, 0];
+            const dx = baseOffsets[pos] * (pos === 4 ? 0 : side);
             const isLast = idx === nodes.length - 1;
+            const review = isReviewNode(node);
+            const totalLevels = node.levels.length;
             const unlocked = isNodeUnlocked(state, nodeIds, node.id);
             const np = getNodeProgress(state, node.id);
             const completed = isNodeCompleted(state, node.id);
             const doneLevels = np.completedLevels.length;
-            const pct = Math.round((doneLevels / LEVELS_PER_NODE) * 100);
+            const pct = Math.round((doneLevels / totalLevels) * 100);
+            const reviewGradient = "from-warning to-warning/70";
+            const nodeGradient = review ? reviewGradient : subject.gradient;
+            // Standard node index (1-based) for label, skipping review nodes.
+            const standardIdx = nodes
+              .slice(0, idx + 1)
+              .filter((n) => !isReviewNode(n)).length;
+            // Review index (1-based) for label.
+            const reviewIdx = nodes
+              .slice(0, idx + 1)
+              .filter((n) => isReviewNode(n)).length;
+
 
             const Body = (
               <div
@@ -90,21 +110,28 @@ function SubjectPage() {
                   !unlocked && "opacity-60",
                 )}
               >
-                {/* Stars above */}
-                <div className="flex items-center gap-0.5 mb-0.5">
-                  {Array.from({ length: LEVELS_PER_NODE }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={cn(
-                        "size-2.5",
-                        i < doneLevels
-                          ? "text-warning fill-warning"
-                          : "text-muted-foreground/30",
-                      )}
-                      strokeWidth={2.5}
-                    />
-                  ))}
-                </div>
+                {/* Stars above (only for standard nodes) */}
+                {!review && (
+                  <div className="flex items-center gap-0.5 mb-0.5">
+                    {Array.from({ length: totalLevels }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={cn(
+                          "size-2.5",
+                          i < doneLevels
+                            ? "text-warning fill-warning"
+                            : "text-muted-foreground/30",
+                        )}
+                        strokeWidth={2.5}
+                      />
+                    ))}
+                  </div>
+                )}
+                {review && (
+                  <div className="mb-0.5 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-warning/20 text-warning-foreground">
+                    Ripasso
+                  </div>
+                )}
 
                 {/* Circular node */}
                 <div className="relative">
@@ -129,7 +156,11 @@ function SubjectPage() {
                       r="36"
                       fill="none"
                       className={cn(
-                        completed ? "stroke-success" : "stroke-primary",
+                        completed
+                          ? "stroke-success"
+                          : review
+                            ? "stroke-warning"
+                            : "stroke-primary",
                       )}
                       strokeWidth="4"
                       strokeLinecap="round"
@@ -141,12 +172,15 @@ function SubjectPage() {
                   <div
                     className={cn(
                       "grid place-items-center size-20 rounded-full text-3xl bg-gradient-to-br text-primary-foreground node-shadow border-4 border-background",
-                      completed ? "from-success to-success/70" : subject.gradient,
+                      completed ? "from-success to-success/70" : nodeGradient,
+                      review && !completed && "ring-4 ring-warning/30",
                     )}
                   >
                     {unlocked ? (
                       completed ? (
                         <Check className="size-9" strokeWidth={3} />
+                      ) : review ? (
+                        <Brain className="size-9" strokeWidth={2.5} />
                       ) : (
                         <span>{node.emoji}</span>
                       )
@@ -159,7 +193,7 @@ function SubjectPage() {
                 {/* Label */}
                 <div className="text-center mt-1 px-2 max-w-[180px]">
                   <div className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
-                    Nodo {idx + 1}
+                    {review ? `Ripasso ${reviewIdx}` : `Nodo ${standardIdx}`}
                   </div>
                   <div className="font-extrabold text-sm text-foreground leading-tight truncate">
                     {node.title}
@@ -167,6 +201,7 @@ function SubjectPage() {
                 </div>
               </div>
             );
+
 
             return (
               <li
