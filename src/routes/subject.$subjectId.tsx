@@ -71,8 +71,11 @@ function SubjectPage() {
           </div>
         </div>
 
-        <ol className="space-y-3">
+        <ol className="relative pt-2 pb-6">
           {nodes.map((node, idx) => {
+            const offsets = [0, 72, 96, 72, 0, -72, -96, -72];
+            const dx = offsets[idx % offsets.length];
+            const isLast = idx === nodes.length - 1;
             const unlocked = isNodeUnlocked(state, nodeIds, node.id);
             const np = getNodeProgress(state, node.id);
             const completed = isNodeCompleted(state, node.id);
