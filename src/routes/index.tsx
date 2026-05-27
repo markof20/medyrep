@@ -50,11 +50,12 @@ function HomePage() {
             const completed = nodes.filter((n) => isNodeCompleted(state, n.id)).length;
             const totalLevels = nodes.reduce(
               (acc, n) =>
-                acc + Math.min(LEVELS_PER_NODE, getNodeProgress(state, n.id).completedLevels.length),
+                acc + Math.min(n.levels.length, getNodeProgress(state, n.id).completedLevels.length),
               0,
             );
-            const maxLevels = total * LEVELS_PER_NODE;
+            const maxLevels = nodes.reduce((acc, n) => acc + n.levels.length, 0);
             const pct = maxLevels === 0 ? 0 : Math.round((totalLevels / maxLevels) * 100);
+
             return (
               <li key={s.id}>
                 <Link
