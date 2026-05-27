@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { SUBJECTS, getNodesForSubject, LEVELS_PER_NODE } from "@/data/medContent";
+import { SUBJECTS, getNodesForSubject } from "@/data/medContent";
 import { isNodeCompleted, useMedStore, getNodeProgress } from "@/lib/medStore";
 import { MedHeader } from "@/components/MedHeader";
 import { BottomNav } from "@/components/BottomNav";
