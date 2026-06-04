@@ -1,0 +1,1 @@
+import{j as o,L as t}from"./index-BEeoU-eB.js";const e=()=>o.jsxs("div",{className:"p-8 text-center",children:["Nodo non trovato."," ",o.jsx(t,{to:"/",className:"text-primary underline",children:"Torna alle materie"})]});export{e as notFoundComponent};

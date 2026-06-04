@@ -1,0 +1,1 @@
+import{j as o,L as n}from"./index-BEeoU-eB.js";const e=()=>o.jsxs("div",{className:"p-8 text-center",children:["Livello non trovato."," ",o.jsx(n,{to:"/",className:"text-primary underline",children:"Torna al percorso"})]});export{e as notFoundComponent};
