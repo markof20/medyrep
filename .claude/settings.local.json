@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
+      "Bash(npx tsr *)",
+      "Bash(npx @tanstack/router-cli generate)",
+      "Bash(timeout 60 npm run build)",
+      "Bash(npm run *)",
+      "Bash(npx eslint *)",
+      "Read(//tmp/**)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8080/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8080/leaderboard)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8080/friends)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8080/profile)",
+      "Bash(curl -s http://localhost:8080/leaderboard)",
+      "Bash(curl -s --compressed http://localhost:8080/leaderboard)",
+      "Bash(curl -s --compressed http://localhost:8080/profile)",
+      "Bash(curl -s --compressed http://localhost:8080/leaderboard -o /tmp/lb.html)",
+      "Bash(curl -s --compressed http://localhost:8080/ -o /tmp/home.html)",
+      "Skill(code-review)",
+      "Skill(code-review:*)",
+      "PowerShell(cd c:\\\\dev\\\\medyrep; npx tsc --noEmit 2>&1; Write-Host \"EXIT:$LASTEXITCODE\")",
+      "Bash(vercel --version)",
+      "Bash(npx --version)"
+    ]
+  }
+}
