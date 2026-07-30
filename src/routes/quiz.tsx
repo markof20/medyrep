@@ -19,7 +19,7 @@ export const Route = createFileRoute("/quiz")({
 });
 
 /**
- * Primo livello disponibile del nodo: i 4 moduli sono percorsi indipendenti,
+ * Primo livello disponibile del nodo: i moduli sono percorsi indipendenti,
  * quindi si cerca modulo per modulo (in ordine) il primo livello sbloccato
  * e non ancora completato al loro interno.
  */

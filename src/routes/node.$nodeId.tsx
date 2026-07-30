@@ -64,7 +64,8 @@ function NodePage() {
           <p className="text-sm opacity-90 mt-1">{node.subtitle}</p>
           {!review && (
             <div className="mt-3 text-[11px] font-extrabold uppercase tracking-wider opacity-90">
-              4 moduli · scegli quale studiare per primo
+              {modules.length} {modules.length === 1 ? "modulo" : "moduli"} · scegli quale studiare
+              per primo
             </div>
           )}
         </div>

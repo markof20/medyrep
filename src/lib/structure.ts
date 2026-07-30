@@ -1,4 +1,5 @@
 import { type Level, type Node, isReviewNode } from "@/data/medContent";
+import { EXAM_MODULES } from "@/data/examModules";
 import { type MedState, isLevelCompleted } from "@/lib/medStore";
 
 /**
@@ -14,31 +15,42 @@ export type ModuleGroup = {
   levels: Level[];
 };
 
-/**
- * Ogni esame standard viene esposto come 4 moduli indipendenti ("percorsi
- * separati"): scegliere di studiare il modulo 3 non richiede aver finito
- * il modulo 1. I nodi di ripasso hanno un solo livello e restano un unico
- * "modulo" che coincide con l'esame stesso.
- */
-const MODULE_SIZES = [3, 3, 2, 2];
+// Fallback usato solo se un nodo standard non ha una voce in EXAM_MODULES
+// (non dovrebbe accadere: tutti i 36 esami del piano di studi sono mappati).
+const DEFAULT_MODULE_NAMES = ["Modulo 1", "Modulo 2", "Modulo 3", "Modulo 4"];
 
+/** Ripartisce i livelli tra `count` moduli nel modo più equo possibile. */
+function distributeLevels(levels: Level[], count: number): Level[][] {
+  const base = Math.floor(levels.length / count);
+  const extra = levels.length % count;
+  const groups: Level[][] = [];
+  let offset = 0;
+  for (let i = 0; i < count; i++) {
+    const size = base + (i < extra ? 1 : 0);
+    groups.push(levels.slice(offset, offset + size));
+    offset += size;
+  }
+  return groups;
+}
+
+/**
+ * Ogni esame standard viene esposto con gli stessi moduli del piano di studi
+ * ufficiale (cfr. EXAM_MODULES): scegliere di studiare un modulo non richiede
+ * aver finito i precedenti — sono percorsi indipendenti. I nodi di ripasso
+ * hanno un solo livello e restano un unico "modulo" che coincide con l'esame
+ * stesso.
+ */
 export function getModules(node: Node): ModuleGroup[] {
   if (isReviewNode(node)) {
     return [{ index: 0, title: node.title, subtitle: node.subtitle, levels: node.levels }];
   }
-  const groups: ModuleGroup[] = [];
-  let offset = 0;
-  MODULE_SIZES.forEach((size, i) => {
-    const levels = node.levels.slice(offset, offset + size);
-    groups.push({
-      index: i,
-      title: `Modulo ${i + 1}`,
-      subtitle: levels.map((l) => l.title).join(" · "),
-      levels,
-    });
-    offset += size;
-  });
-  return groups;
+  const names = EXAM_MODULES[node.id] ?? DEFAULT_MODULE_NAMES;
+  return distributeLevels(node.levels, names.length).map((levels, i) => ({
+    index: i,
+    title: names[i],
+    subtitle: levels.map((l) => l.title).join(" · "),
+    levels,
+  }));
 }
 
 export function getModule(node: Node, moduleIndex: number): ModuleGroup | undefined {
